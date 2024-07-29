@@ -3,11 +3,22 @@
 
 #pragma once
 
+#include <string>
 #include <string_view>
 
 namespace Oulu
 {
 	class MessageTokenizer;
+
+	/** Escapes a string to the IRCv3 tag format.
+	 * \param str The string to escape.
+	 */
+	std::string EscapeTag(const std::string_view& str);
+
+	/** Unescapes a string from the IRCv3 tag format.
+	 * \param str The string to unescape.
+	 */
+	std::string UnescapeTag(const std::string_view& str);
 }
 
 /** MessageTokenizer allows tokens in the IRC wire format to be read from a message. */

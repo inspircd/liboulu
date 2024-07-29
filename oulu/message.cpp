@@ -3,6 +3,82 @@
 
 #include <oulu/message.hpp>
 
+std::string Oulu::EscapeTag(const std::string_view& str)
+{
+	std::string ret;
+	ret.reserve(str.size());
+
+	for (const auto chr : str)
+	{
+		switch (chr)
+		{
+			case ' ':
+				ret.append("\\s");
+				break;
+			case ';':
+				ret.append("\\:");
+				break;
+			case '\\':
+				ret.append("\\\\");
+				break;
+			case '\n':
+				ret.append("\\n");
+				break;
+			case '\r':
+				ret.append("\\r");
+				break;
+			default:
+				ret.push_back(chr);
+				break;
+		}
+	}
+	return ret;
+}
+
+std::string Oulu::UnescapeTag(const std::string_view& str)
+{
+	std::string ret;
+	ret.reserve(str.size());
+
+	for (auto it = str.cbegin(); it != str.cend(); ++it)
+	{
+		auto chr = *it;
+		if (chr != '\\')
+		{
+			ret.push_back(chr);
+			continue;
+		}
+
+		it++;
+		if (it == str.cend())
+			break;
+
+		chr = *it;
+		switch (chr)
+		{
+			case 's':
+				ret.push_back(' ');
+				break;
+			case ':':
+				ret.push_back(';');
+				break;
+			case '\\':
+				ret.push_back('\\');
+				break;
+			case 'n':
+				ret.push_back('\n');
+				break;
+			case 'r':
+				ret.push_back('\r');
+				break;
+			default:
+				ret.push_back(chr);
+				break;
+		}
+	}
+	return ret;
+}
+
 Oulu::MessageTokenizer::MessageTokenizer(const std::string_view& m)
 	: message(m)
 {

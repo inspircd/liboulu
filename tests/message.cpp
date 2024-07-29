@@ -5,6 +5,29 @@
 
 #include <oulu/message.hpp>
 
+class TestFunctions : public CxxTest::TestSuite
+{
+public:
+	void TestEscapeTag()
+	{
+		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo;bar"), "foo\\:bar")
+		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo bar"), "foo\\sbar")
+		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\\bar"), "foo\\\\bar")
+		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\rbar"), "foo\\rbar")
+		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\nbar"), "foo\\nbar")
+	}
+
+	void TestUnescapeTag()
+	{
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\:bar"), "foo;bar")
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\sbar"), "foo bar")
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\\\bar"), "foo\\bar")
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\rbar"), "foo\rbar")
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\nbar"), "foo\nbar")
+		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foobar\\"), "foobar")
+	}
+};
+
 class TestMessageTokenizer : public CxxTest::TestSuite
 {
 public:
