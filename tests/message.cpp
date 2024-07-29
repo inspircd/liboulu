@@ -17,6 +17,98 @@ public:
 		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\nbar"), "foo\\nbar")
 	}
 
+	void TestIsCTCP()
+	{
+		// Test that we can handle valid CTCPs.
+		TS_ASSERT(Oulu::IsCTCP("\1FOO\1"))
+		TS_ASSERT(Oulu::IsCTCP("\1FOO bar\1"))
+
+		// Test that we can handle weird CTCPs that exist in the wild.
+		TS_ASSERT(Oulu::IsCTCP("\1FOO"))
+		TS_ASSERT(Oulu::IsCTCP("\1FOO "))
+		TS_ASSERT(Oulu::IsCTCP("\1FOO \1"))
+		TS_ASSERT(Oulu::IsCTCP("\1FOO bar"))
+
+		// Test that we reject malformed CTCPs.
+		TS_ASSERT(!Oulu::IsCTCP("FOO"))
+		TS_ASSERT(!Oulu::IsCTCP("\1"))
+		TS_ASSERT(!Oulu::IsCTCP("\1\1"))
+		TS_ASSERT(!Oulu::IsCTCP("\1 FOO"))
+	}
+
+	void TestParseCTCP2()
+	{
+		std::string_view name;
+
+		// Test that we can handle valid CTCPs.
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO\1", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar\1", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+
+		// Test that we can handle weird CTCPs that exist in the wild.
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO ", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO \1", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar", name))
+		TS_ASSERT_EQUALS(name, "FOO")
+
+		// Test that we reject malformed CTCPs.
+		TS_ASSERT(!Oulu::ParseCTCP("FOO", name))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT(!Oulu::ParseCTCP("\1", name))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT(!Oulu::ParseCTCP("\1\1", name))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT(!Oulu::ParseCTCP("\1 FOO", name))
+		TS_ASSERT_EQUALS(name, "");
+	}
+
+	void TestParseCTCP3()
+	{
+		std::string_view name;
+		std::string_view body;
+
+		// Test that we can handle valid CTCPs.
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO\1", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "");
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar\1", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "bar");
+
+		// Test that we can handle weird CTCPs that exist in the wild.
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO ", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO \1", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar", name, body))
+		TS_ASSERT_EQUALS(name, "FOO")
+		TS_ASSERT_EQUALS(body, "bar")
+
+		// Test that we reject malformed CTCPs.
+		TS_ASSERT(!Oulu::ParseCTCP("FOO", name, body))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(!Oulu::ParseCTCP("\1", name, body))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(!Oulu::ParseCTCP("\1\1", name, body))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT_EQUALS(body, "")
+		TS_ASSERT(!Oulu::ParseCTCP("\1 FOO", name, body))
+		TS_ASSERT_EQUALS(name, "");
+		TS_ASSERT_EQUALS(body, "")
+	}
+
 	void TestUnescapeTag()
 	{
 		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\:bar"), "foo;bar")

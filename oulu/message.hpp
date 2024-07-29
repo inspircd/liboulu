@@ -15,6 +15,26 @@ namespace Oulu
 	 */
 	std::string EscapeTag(const std::string_view& str);
 
+	/** Determines whether the specified string contains a CTCP.
+	 * \param str The string to check for a CTCP.
+	 */
+	bool IsCTCP(const std::string_view& str);
+
+	/** Parses a CTCP and extracts the name.
+	 * \param str A string containing a CTCP.
+	 * \param name The location to store the name of the CTCP.
+	 * \return True if the message contained a well formed CTCP; otherwise, false.
+	 */
+	bool ParseCTCP(const std::string_view& str, std::string_view& name);
+
+	/** Parses a CTCP and extracts the name and body.
+	 * \param str A string containing a CTCP.
+	 * \param name The location to store the name of the CTCP.
+	 * \param body The location to store the body of the CTCP.
+	 * \return True if the message contained a well formed CTCP; otherwise, false.
+	 */
+	bool ParseCTCP(const std::string_view& str, std::string_view& name, std::string_view& body);
+
 	/** Unescapes a string from the IRCv3 tag format.
 	 * \param str The string to unescape.
 	 */

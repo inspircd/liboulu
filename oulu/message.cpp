@@ -35,6 +35,71 @@ std::string Oulu::EscapeTag(const std::string_view& str)
 	return ret;
 }
 
+bool Oulu::IsCTCP(const std::string_view& str)
+{
+	// According to draft-oakley-irc-ctcp-02 a valid CTCP must begin with SOH and
+	// contain at least one octet which is not NUL, SOH, CR, LF, or SPACE. As most
+	// of these are restricted at the protocol level we only need to check for SOH
+	// and SPACE.
+	return (str.length() >= 2) && (str[0] == '\x1') && (str[1] != '\x1') && (str[1] != ' ');
+}
+
+bool Oulu::ParseCTCP(const std::string_view& str, std::string_view& name)
+{
+	if (!IsCTCP(str))
+	{
+		name = {};
+		return false;
+	}
+
+	auto end_of_name = str.find(' ', 2);
+	if (end_of_name == std::string_view::npos)
+	{
+		// The CTCP only contains a name.
+		auto end_of_ctcp = str.back() == '\x1' ? 1 : 0;
+		name = str.substr(1, str.length() - end_of_ctcp - 1);
+		return true;
+	}
+
+	// The CTCP contains a name and a body.
+	name = str.substr(1, end_of_name - 1);
+	return true;
+}
+
+bool Oulu::ParseCTCP(const std::string_view& str, std::string_view& name, std::string_view& body)
+{
+	if (!IsCTCP(str))
+	{
+		name = body = {};
+		return false;
+	}
+
+	auto end_of_name = str.find(' ', 2);
+	auto end_of_ctcp = str.back() == '\x1' ? 1 : 0;
+	if (end_of_name == std::string_view::npos)
+	{
+		// The CTCP only contains a name.
+		name = str.substr(1, str.length() - end_of_ctcp - 1);
+		body = {};
+		return true;
+	}
+
+	// The CTCP contains a name and a body.
+	name = str.substr(1, end_of_name - 1);
+
+	auto start_of_body = str.find_first_not_of(' ', end_of_name + 1);
+	if (start_of_body == std::string_view::npos)
+	{
+		// The CTCP body is provided but empty.
+		body = {};
+		return true;
+	}
+
+	// The CTCP body provided was non-empty.
+	body = str.substr(start_of_body, str.length() - start_of_body - end_of_ctcp);
+	return true;
+}
+
 std::string Oulu::UnescapeTag(const std::string_view& str)
 {
 	std::string ret;
