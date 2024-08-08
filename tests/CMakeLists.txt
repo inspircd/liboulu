@@ -13,6 +13,7 @@ if(CXXTEST_FOUND)
 		set(TEST_TARGET "oulu-test-${TEST_NAME}")
 
 		cxxtest_add_test(${TEST_TARGET} "${TEST_NAME}.test.cpp" ${TEST})
+		target_compile_definitions(${TEST_TARGET} PRIVATE "OULU_BUILD")
 		target_link_libraries(${TEST_TARGET} "oulu")
 	endforeach()
 endif()

@@ -7,3 +7,4 @@ endif()
 
 file(GLOB OULU_SOURCES CONFIGURE_DEPENDS "*.cpp" "*.hpp")
 add_library("oulu" STATIC ${OULU_SOURCES})
+target_compile_definitions("oulu" PRIVATE "OULU_BUILD")
