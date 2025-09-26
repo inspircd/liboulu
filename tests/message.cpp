@@ -1,168 +1,193 @@
 // Oulu <https://github.com/SadieCat/oulu/>
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include <cxxtest/TestSuite.h>
+#include <catch2/catch_test_macros.hpp>
 
 #include <oulu/message.hpp>
 
-class TestFunctions : public CxxTest::TestSuite
+TEST_CASE("Test that EscapeTag functions as expected")
 {
-public:
-	void TestEscapeTag()
-	{
-		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo;bar"), "foo\\:bar")
-		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo bar"), "foo\\sbar")
-		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\\bar"), "foo\\\\bar")
-		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\rbar"), "foo\\rbar")
-		TS_ASSERT_EQUALS(Oulu::EscapeTag("foo\nbar"), "foo\\nbar")
-	}
+	REQUIRE(Oulu::EscapeTag("foo;bar") == "foo\\:bar");
+	REQUIRE(Oulu::EscapeTag("foo bar") == "foo\\sbar");
+	REQUIRE(Oulu::EscapeTag("foo\\bar") == "foo\\\\bar");
+	REQUIRE(Oulu::EscapeTag("foo\rbar") == "foo\\rbar");
+	REQUIRE(Oulu::EscapeTag("foo\nbar") == "foo\\nbar");
+}
 
-	void TestIsCTCP()
-	{
-		// Test that we can handle valid CTCPs.
-		TS_ASSERT(Oulu::IsCTCP("\1FOO\1"))
-		TS_ASSERT(Oulu::IsCTCP("\1FOO bar\1"))
-
-		// Test that we can handle weird CTCPs that exist in the wild.
-		TS_ASSERT(Oulu::IsCTCP("\1FOO"))
-		TS_ASSERT(Oulu::IsCTCP("\1FOO "))
-		TS_ASSERT(Oulu::IsCTCP("\1FOO \1"))
-		TS_ASSERT(Oulu::IsCTCP("\1FOO bar"))
-
-		// Test that we reject malformed CTCPs.
-		TS_ASSERT(!Oulu::IsCTCP("FOO"))
-		TS_ASSERT(!Oulu::IsCTCP("\1"))
-		TS_ASSERT(!Oulu::IsCTCP("\1\1"))
-		TS_ASSERT(!Oulu::IsCTCP("\1 FOO"))
-	}
-
-	void TestParseCTCP2()
-	{
-		std::string_view name;
-
-		// Test that we can handle valid CTCPs.
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO\1", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar\1", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-
-		// Test that we can handle weird CTCPs that exist in the wild.
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO ", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO \1", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar", name))
-		TS_ASSERT_EQUALS(name, "FOO")
-
-		// Test that we reject malformed CTCPs.
-		TS_ASSERT(!Oulu::ParseCTCP("FOO", name))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT(!Oulu::ParseCTCP("\1", name))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT(!Oulu::ParseCTCP("\1\1", name))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT(!Oulu::ParseCTCP("\1 FOO", name))
-		TS_ASSERT_EQUALS(name, "");
-	}
-
-	void TestParseCTCP3()
-	{
-		std::string_view name;
-		std::string_view body;
-
-		// Test that we can handle valid CTCPs.
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO\1", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "");
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar\1", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "bar");
-
-		// Test that we can handle weird CTCPs that exist in the wild.
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO ", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO \1", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(Oulu::ParseCTCP("\1FOO bar", name, body))
-		TS_ASSERT_EQUALS(name, "FOO")
-		TS_ASSERT_EQUALS(body, "bar")
-
-		// Test that we reject malformed CTCPs.
-		TS_ASSERT(!Oulu::ParseCTCP("FOO", name, body))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(!Oulu::ParseCTCP("\1", name, body))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(!Oulu::ParseCTCP("\1\1", name, body))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT_EQUALS(body, "")
-		TS_ASSERT(!Oulu::ParseCTCP("\1 FOO", name, body))
-		TS_ASSERT_EQUALS(name, "");
-		TS_ASSERT_EQUALS(body, "")
-	}
-
-	void TestUnescapeTag()
-	{
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\:bar"), "foo;bar")
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\sbar"), "foo bar")
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\\\bar"), "foo\\bar")
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\rbar"), "foo\rbar")
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foo\\nbar"), "foo\nbar")
-		TS_ASSERT_EQUALS(Oulu::UnescapeTag("foobar\\"), "foobar")
-	}
-};
-
-class TestMessageTokenizer : public CxxTest::TestSuite
+TEST_CASE("Test that IsCTCP functions as expected")
 {
-public:
-	void TestGetMiddle()
+	SECTION("Test that we can handle valid CTCPs")
 	{
-		const auto* message = "this is :a test";
+		REQUIRE(Oulu::IsCTCP("\1FOO\1"));
+		REQUIRE(Oulu::IsCTCP("\1FOO bar\1"));
+	}
 
+	SECTION("Test that we can handle weird CTCPs that exist in the wild")
+	{
+		REQUIRE(Oulu::IsCTCP("\1FOO"));
+		REQUIRE(Oulu::IsCTCP("\1FOO "));
+		REQUIRE(Oulu::IsCTCP("\1FOO \1"));
+		REQUIRE(Oulu::IsCTCP("\1FOO bar"));
+	}
+
+	SECTION("Test that we reject malformed CTCPs")
+	{
+		REQUIRE(!Oulu::IsCTCP("FOO"));
+		REQUIRE(!Oulu::IsCTCP("\1"));
+		REQUIRE(!Oulu::IsCTCP("\1\1"));
+		REQUIRE(!Oulu::IsCTCP("\1 FOO"));
+	}
+}
+
+TEST_CASE("Test that ParseCTCP(name) functions as expected")
+{
+	std::string_view name;
+
+	SECTION("Test that we can handle valid CTCPs")
+	{
+		REQUIRE(Oulu::ParseCTCP("\1FOO\1", name));
+		REQUIRE(name == "FOO");
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO bar\1", name));
+		REQUIRE(name == "FOO");
+	}
+
+	SECTION("Test that we can handle weird CTCPs that exist in the wild")
+	{
+		REQUIRE(Oulu::ParseCTCP("\1FOO", name));
+		REQUIRE(name == "FOO");
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO ", name));
+		REQUIRE(name == "FOO");
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO \1", name));
+		REQUIRE(name == "FOO");
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO bar", name));
+		REQUIRE(name == "FOO");
+	}
+
+	SECTION("Test that we reject malformed CTCPs")
+	{
+		REQUIRE(!Oulu::ParseCTCP("FOO", name));
+		REQUIRE(name.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1", name));
+		REQUIRE(name.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1\1", name));
+		REQUIRE(name.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1 FOO", name));
+		REQUIRE(name.empty());
+	}
+}
+
+TEST_CASE("Test that ParseCTCP(name, body) functions as expected")
+{
+	std::string_view name;
+	std::string_view body;
+
+	SECTION("Test that we can handle valid CTCPs")
+	{
+		REQUIRE(Oulu::ParseCTCP("\1FOO\1", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body.empty());
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO bar\1", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body == "bar");
+	}
+
+	SECTION("Test that we can handle weird CTCPs that exist in the wild")
+	{
+		REQUIRE(Oulu::ParseCTCP("\1FOO", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body.empty());
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO ", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body.empty());
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO \1", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body.empty());
+
+		REQUIRE(Oulu::ParseCTCP("\1FOO bar", name, body));
+		REQUIRE(name == "FOO");
+		REQUIRE(body == "bar");
+	}
+
+	SECTION("Test that we reject malformed CTCPs")
+	{
+		REQUIRE(!Oulu::ParseCTCP("FOO", name, body));
+		REQUIRE(name.empty());
+		REQUIRE(body.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1", name, body));
+		REQUIRE(name.empty());
+		REQUIRE(body.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1\1", name, body));
+		REQUIRE(name.empty());
+		REQUIRE(body.empty());
+
+		REQUIRE(!Oulu::ParseCTCP("\1 FOO", name, body));
+		REQUIRE(name.empty());
+		REQUIRE(body.empty());
+	}
+}
+
+TEST_CASE("Test that UnescapeTag functions as expected")
+{
+	REQUIRE(Oulu::UnescapeTag("foo\\:bar") == "foo;bar");
+	REQUIRE(Oulu::UnescapeTag("foo\\sbar") == "foo bar");
+	REQUIRE(Oulu::UnescapeTag("foo\\\\bar") == "foo\\bar");
+	REQUIRE(Oulu::UnescapeTag("foo\\rbar") == "foo\rbar");
+	REQUIRE(Oulu::UnescapeTag("foo\\nbar") == "foo\nbar");
+	REQUIRE(Oulu::UnescapeTag("foobar\\") == "foobar");
+}
+
+TEST_CASE("Test that MessageTokenizer functions as expected")
+{
+	const auto* message = "this is :a test";
+
+	SECTION("Test that GetMiddle functions as expected")
+	{
 		Oulu::MessageTokenizer tokenizer(message);
 		std::string_view sv;
 
-		TS_ASSERT(tokenizer.GetMiddle(sv))
-		TS_ASSERT_EQUALS(sv, "this")
+		REQUIRE(tokenizer.GetMiddle(sv));
+		REQUIRE(sv == "this");
 
-		TS_ASSERT(tokenizer.GetMiddle(sv))
-		TS_ASSERT_EQUALS(sv, "is")
+		REQUIRE(tokenizer.GetMiddle(sv));
+		REQUIRE(sv == "is");
 
-		TS_ASSERT(tokenizer.GetMiddle(sv))
-		TS_ASSERT_EQUALS(sv, ":a")
+		REQUIRE(tokenizer.GetMiddle(sv));
+		REQUIRE(sv == ":a");
 
-		TS_ASSERT(tokenizer.GetMiddle(sv))
-		TS_ASSERT_EQUALS(sv, "test")
+		REQUIRE(tokenizer.GetMiddle(sv));
+		REQUIRE(sv == "test");
 
-		TS_ASSERT(!tokenizer.GetMiddle(sv))
-		TS_ASSERT_EQUALS(sv, "")
+		REQUIRE(!tokenizer.GetMiddle(sv));
+		REQUIRE(sv.empty());
 	}
 
-	void TestGetTrailing()
+	SECTION("Test that GetTrailing functions as expected")
 	{
-		const auto* message = "this is :a test";
-
 		Oulu::MessageTokenizer tokenizer(message);
 		std::string_view sv;
 
-		TS_ASSERT(tokenizer.GetTrailing(sv))
-		TS_ASSERT_EQUALS(sv, "this")
+		REQUIRE(tokenizer.GetTrailing(sv));
+		REQUIRE(sv == "this");
 
-		TS_ASSERT(tokenizer.GetTrailing(sv))
-		TS_ASSERT_EQUALS(sv, "is")
+		REQUIRE(tokenizer.GetTrailing(sv));
+		REQUIRE(sv == "is");
 
-		TS_ASSERT(tokenizer.GetTrailing(sv))
-		TS_ASSERT_EQUALS(sv, "a test")
+		REQUIRE(tokenizer.GetTrailing(sv));
+		REQUIRE(sv == "a test");
 
-		TS_ASSERT(!tokenizer.GetTrailing(sv))
-		TS_ASSERT_EQUALS(sv, "")
+		REQUIRE(!tokenizer.GetTrailing(sv));
+		REQUIRE(sv.empty());
 	}
-};
+}
