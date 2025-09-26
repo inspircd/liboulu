@@ -1,0 +1,58 @@
+name: Build
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 0 * * 0'
+jobs:
+  build:
+    runs-on: ${{ matrix.container }}
+    env:
+      CONAN_HOME: ${{ github.workspace }}/win/build/conan
+      CXX: ${{ matrix.compiler }}
+    steps:
+      - name: Checkout Oulu
+        uses: actions/checkout@v4
+
+      - name: Install dependencies (Ubuntu)
+        if: matrix.container == 'ubuntu-latest'
+        run: |
+          sudo apt-get update --assume-yes
+          sudo apt-get install --assume-yes --no-install-recommends \
+            catch2 \
+            clang \
+            cmake \
+            g++
+
+      - name: Install dependencies (Windows)
+        if: matrix.container == 'windows-latest'
+        run: |
+          vcpkg integrate install
+          vcpkg install catch2
+          Add-Content -Path $env:GITHUB_ENV -Value "CMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+
+      - name: Run CMake
+        working-directory: ${{ github.workspace }}/build
+        run: |
+          cmake ..
+
+      - name: Build library
+        working-directory: ${{ github.workspace }}/build
+        run: |
+          cmake --build .
+
+      - name: Run tests
+        working-directory: ${{ github.workspace }}/build
+        run: |
+          ctest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - compiler: clang++
+            container: ubuntu-latest
+          - compiler: g++
+            container: ubuntu-latest
+          - compiler: cl
+            container: windows-latest
