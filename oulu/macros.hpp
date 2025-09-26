@@ -23,3 +23,9 @@
 #else
 # define OULU_INTERNAL private
 #endif
+
+/** \def OULU_STRINGIFY(ARG)
+ * Allows stringifying an argument which is passed to a preprocessor macro.
+ */
+#define OULU_STRINGIFY(ARG) OULU_STRINGIFY_INTERNAL(ARG)
+#define OULU_STRINGIFY_INTERNAL(ARG) #ARG
