@@ -12,7 +12,7 @@ jobs:
       CXX: ${{ matrix.compiler }}
     steps:
       - name: Checkout Oulu
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install dependencies (Ubuntu)
         if: matrix.container == 'ubuntu-latest'
