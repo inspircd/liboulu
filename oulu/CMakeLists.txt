@@ -1,4 +1,4 @@
-# Oulu <https://github.com/SadieCat/oulu/>
+# Oulu <https://github.com/inspircd/liboulu/>
 # SPDX-License-Identifier: LGPL-3.0-or-later
 
 if(${CMAKE_CURRENT_SOURCE_DIR} STREQUAL ${PROJECT_SOURCE_DIR})
